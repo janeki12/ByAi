@@ -1,0 +1,127 @@
+İnstagram Oto Hesap Acma Programı . 3.10.24
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import time
+import random
+import string
+
+def random_string(length):
+    """Generate a random string of fixed length."""
+    letters = string.ascii_letters  # Both upper and lowercase letters
+    return ''.join(random.choice(letters) for i in range(length))
+
+def random_username():
+    """Generate a random username."""
+    return random_string(8)  # Adjust the length as needed
+
+def random_password():
+    """Generate a random password."""
+    return random_string(12)  # You can include digits or special characters if desired
+
+def random_first_last_name():
+    """Generate random first and last names."""
+    first_name = random_string(6)  # Adjust length as needed
+    last_name = random_string(8)   # Adjust length as needed
+    return first_name, last_name
+
+def save_account_info(email, username, first_name, last_name, password):
+    """Save the account information to a text file on the desktop."""
+    desktop_path = "C:\\Users\\Ozan\\Desktop\\account_info.txt"  # Update with your username if necessary
+    with open(desktop_path, 'a') as file:
+        file.write(f"Email: {email}\nUsername: {username}\nFirst Name: {first_name}\nLast Name: {last_name}\nPassword: {password}\n\n")
+
+def setup_temp_email():
+    driver = webdriver.Chrome()
+    driver.get("https://www.minuteinbox.com")
+
+    time.sleep(5)
+
+    copy_button = driver.find_element(By.XPATH, '/html/body/div[1]/div[3]/div/a[4]')
+    copy_button.click()
+
+    time.sleep(2)
+
+    email_element = driver.find_element(By.CSS_SELECTOR, "#email")
+    email = email_element.text
+
+    print("Kopyalanan e-posta adresi:", email)
+
+    driver.quit()
+    return email
+
+def signup_instagram(email):
+    driver = webdriver.Chrome()
+    driver.get("https://www.instagram.com/accounts/emailsignup/")
+
+    try:
+        email_input = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "input[name='emailOrPhone']"))
+        )
+        email_input.click()
+        email_input.send_keys(email)
+
+        first_name, last_name = random_first_last_name()
+        username = random_username()
+        password = random_password()
+
+        # Fill in the first name
+        first_name_input = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "input[name='fullName']"))
+        )
+        first_name_input.send_keys(first_name)
+
+        # Fill in the username
+        username_input = driver.find_element(By.CSS_SELECTOR, "input[name='username']")
+        username_input.send_keys(username)
+
+        # Fill in the password
+        password_input = driver.find_element(By.CSS_SELECTOR, "input[name='password']")
+        password_input.send_keys(password)
+
+        print("Bilgiler başarıyla girildi.")
+
+        # Save account info
+        save_account_info(email, username, first_name, last_name, password)
+
+        # Click the signup button
+        signup_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="mount_0_0_Ge"]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div[2]/div/form/div[6]/div'))
+        )
+        signup_button.click()
+        print("Kayıt butonuna tıklandı.")
+
+        # Wait for the birth date selection page to load
+        time.sleep(5)
+
+        # Select birth date
+        birth_date_select = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="mount_0_0_dc"]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div/div[4]/div/div/span/span[3]/select'))
+        )
+        birth_date_select.click()
+
+        # Select the desired date (e.g., option 26)
+        birth_date_option = driver.find_element(By.XPATH, '//*[@id="mount_0_0_dc"]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div/div[4]/div/div/span/span[3]/select/option[26]')
+        birth_date_option.click()
+
+        print("Doğum tarihi başarıyla seçildi.")
+
+        # Click the final signup button
+        final_signup_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="mount_0_0_dc"]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div/div[6]'))
+        )
+        final_signup_button.click()
+        print("Hesap başarıyla oluşturuldu.")
+
+    except Exception as e:
+        print("Hata oluştu:", e)
+
+    finally:
+        driver.quit()
+
+if __name__ == "__main__":
+    email = setup_temp_email()
+    signup_instagram(email)
